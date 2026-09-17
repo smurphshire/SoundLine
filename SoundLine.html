@@ -1,0 +1,1824 @@
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundLine Visual Music Synthesizer</title>
+    <!-- Tailwind CSS Whitelisted CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar styling for a polished ultra-dark synth look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #404040;
+        }
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-black text-neutral-100 h-full flex flex-col overflow-hidden font-sans">
+
+    <!-- Top App Header / Status Bar -->
+    <header class="bg-neutral-950 border-b border-neutral-900 px-6 py-3 flex items-center justify-between shrink-0 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></div>
+            <h1 class="text-sm font-bold tracking-widest uppercase bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent font-mono">
+                SoundLine Studio
+
+            </h1>
+        </div>
+        <div class="flex items-center space-x-4 text-[10px] text-neutral-400 bg-black px-3 py-1.5 rounded border border-neutral-900 font-mono">
+            <div>Click Grid: <span class="text-teal-400 font-semibold">New Node</span></div>
+            <div class="text-neutral-800">|</div>
+            <div>Shift + Drag Node: <span class="text-amber-400 font-semibold">Duplicate Node & Tail</span></div>
+            <div class="text-neutral-800">|</div>
+            <div>Drag Node: <span class="text-lime-400 font-semibold">Move Location</span></div>
+            <div class="text-neutral-800">|</div>
+            <div>Drag Handle Dot: <span class="text-teal-400 font-semibold">Adjust Curve & Tail</span></div>
+        </div>
+    </header>
+
+    <!-- Main Viewport Context Space -->
+    <main class="flex-1 relative bg-black overflow-hidden group flex">
+        <!-- Audio Context Activation Overlay Link -->
+        <div id="audio-welcome-overlay" class="absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-center space-y-4 backdrop-blur-sm transition-opacity duration-500">
+            <div class="p-4 rounded-full bg-neutral-900 border border-neutral-800 text-teal-400 animate-bounce">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold tracking-widest uppercase text-neutral-200 font-mono">Launch SoundLine Engine</h2>
+            <p class="text-neutral-500 text-xs max-w-sm text-center font-mono">Activate workspace to initialize custom acoustic node arrays.</p>
+            <button class="px-5 py-2 bg-neutral-100 hover:bg-neutral-200 text-black font-bold font-mono text-xs uppercase tracking-wider rounded active:scale-95 transition-all">
+                Power Studio
+            </button>
+        </div>
+
+        <!-- Floating UI Feedback Alerts -->
+        <div id="toast-container" class="absolute top-4 left-1/2 -translate-x-1/2 z-40 pointer-events-none flex flex-col space-y-2"></div>
+
+        <!-- Left Side: Narrow Global Distortion & Noise Atmosphere Effects Panel (140px) -->
+        <div class="w-[140px] bg-neutral-950 border-r border-neutral-900 p-2 flex flex-col shrink-0 font-mono text-[10px] text-neutral-400 select-none overflow-y-auto">
+            <span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mb-2 border-b border-neutral-900 pb-1 block text-center">Global FX Rack</span>
+            
+            <div class="space-y-2 flex-1">
+                <!-- Overdrive Switch -->
+
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-cyan-400 font-bold">Overdrive</span>
+                        <input id="chk-fx-overdrive" type="checkbox" class="accent-teal-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Warm harmonic soft clipping.</p>
+                </div>
+
+                <!-- Hard Fuzz Switch -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-pink-500 font-bold">Fuzz Box</span>
+                        <input id="chk-fx-fuzz" type="checkbox" class="accent-teal-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Aggressive hard clipped buzz.</p>
+                </div>
+
+                <!-- Lo-Fi Crush Switch -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-amber-500 font-bold">Bit Crush</span>
+                        <input id="chk-fx-crush" type="checkbox" class="accent-teal-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Sample resolution degradation.</p>
+                </div>
+
+                <!-- Heavy Grunge Distortion Switch -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-rose-500 font-bold">Grunge FX</span>
+                        <input id="chk-fx-grunge" type="checkbox" class="accent-teal-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Asymmetric raw amplifier drive.</p>
+                </div>
+
+                <!-- Dead Space Ambiance Generator -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+
+                        <span class="text-indigo-400 font-bold">Dead Space</span>
+                        <input id="chk-fx-space" type="checkbox" class="accent-teal-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Lush atmospheric noise wash.</p>
+                </div>
+
+                <!-- Wobble Static Modulation Modifier -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-yellow-400 font-bold">Wobble Stat</span>
+                        <input id="chk-fx-wobble" type="checkbox" class="accent-teal-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Note-reactive dynamic gating.</p>
+                </div>
+
+                <!-- Ethereal Switch -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-teal-400 font-bold">Ethereal</span>
+
+                        <input id="chk-fx-ethereal" type="checkbox" class="accent-teal-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Smoothing sparkling overtones.</p>
+                </div>
+
+                <!-- Sinister Switch -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-lime-400 font-bold">Sinister</span>
+                        <input id="chk-fx-sinister" type="checkbox" class="accent-lime-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Dark ring modulation cadence.</p>
+                </div>
+
+                <!-- Psychedelic Switch -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-fuchsia-400 font-bold">Psychedelic</span>
+                        <input id="chk-fx-psychedelic" type="checkbox" class="accent-teal-500 cursor-pointer">
+
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Sweeping cosmic multi-phase.</p>
+                </div>
+
+                <!-- Smooth Slope Switch -->
+                <div class="bg-black p-2 rounded border border-neutral-900 flex flex-col space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-emerald-400 font-bold">Smooth Slope</span>
+                        <input id="chk-fx-smooth" type="checkbox" class="accent-lime-500 cursor-pointer">
+                    </div>
+                    <p class="text-[8px] text-neutral-500 leading-tight">Softens transients into swells.</p>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-neutral-900 text-[8px] text-neutral-600 text-center">
+                SOUNDLINE STUDIO 2026
+            </div>
+        </div>
+
+
+        <!-- Central Matrix Sequencer Canvas Space -->
+        <div class="flex-1 relative">
+            <canvas id="synth-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+        </div>
+    </main>
+
+    <!-- Bottom Management Controls Toolbar Menu -->
+    <footer class="bg-neutral-950 border-t border-neutral-900 p-4 shrink-0 shadow-2xl z-30">
+        <div class="max-w-[1600px] mx-auto grid grid-cols-12 gap-4 items-center">
+            
+            <!-- Left Side Element: Two Clean Rows of 5 Node Shapes -->
+            <div class="col-span-4 flex flex-col space-y-1.5 border-r border-neutral-900 pr-3">
+                <span class="text-[9px] font-bold tracking-widest text-neutral-500 uppercase font-mono">Instrument Triggers</span>
+                <div class="grid grid-cols-5 gap-1.5">
+                    <!-- Row 1 Nodes Selection Bay -->
+                    <button id="btn-node-circle" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border-2 border-teal-500 shadow-sm text-[9px]" data-shape="circle">
+                        <div class="w-2.5 h-2.5 rounded-full bg-cyan-400"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-teal-400">Tone</span>
+                    </button>
+
+                    <button id="btn-node-triangle" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="triangle">
+                        <div class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[9px] border-b-pink-500"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Snare</span>
+                    </button>
+                    <button id="btn-node-square" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="square">
+                        <div class="w-2.5 h-2.5 bg-amber-500 rounded-xs"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">String</span>
+                    </button>
+                    <button id="btn-node-diamond" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="diamond">
+                        <div class="w-2.5 h-2.5 bg-purple-500 rotate-45"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Horn</span>
+                    </button>
+                    <button id="btn-node-hexagon" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="hexagon">
+                        <div class="w-3 h-2.5 bg-lime-500" style="clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Kick</span>
+                    </button>
+
+                    <!-- Row 2 Nodes Selection Bay -->
+                    <button id="btn-node-rectangle" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="rectangle">
+
+                        <div class="w-2 h-3 bg-rose-500 rounded-xs"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Piano</span>
+                    </button>
+                    <button id="btn-node-pentagon" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="pentagon">
+                        <div class="w-2.5 h-2.5 bg-teal-400" style="clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Bell</span>
+                    </button>
+                    <button id="btn-node-star" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="star">
+                        <div class="w-3 h-3 bg-yellow-400" style="clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Laser</span>
+                    </button>
+                    <button id="btn-node-cross" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="cross">
+                        <div class="w-3 h-3 bg-slate-400" style="clip-path: polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%);"></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Hi-Hat</span>
+                    </button>
+                    <button id="btn-node-backslash" class="node-selector-btn py-1 px-0.5 flex flex-col items-center justify-center rounded bg-black border border-neutral-900 opacity-60 text-[9px]" data-shape="backslash">
+                        <div class="w-3 h-3 flex items-center justify-center"><div class="w-3.5 h-0.5 bg-red-500 rotate-45 rounded"></div></div>
+                        <span class="mt-0.5 font-mono text-[9px] text-neutral-400">Guitar</span>
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- Central Control Element: Stacked Sliders -->
+            <div class="col-span-4 grid grid-cols-2 gap-3 border-r border-neutral-900 pr-3">
+                <div class="flex flex-col space-y-1 bg-black p-2 rounded border border-neutral-900">
+                    <div class="flex flex-col">
+                        <div class="flex justify-between items-center text-[9px] font-mono text-neutral-400">
+                            <span>BPM</span>
+                            <span id="lbl-val-bpm" class="text-teal-400 font-bold">120</span>
+                        </div>
+                        <input id="slider-param-bpm" type="range" min="60" max="300" value="120" step="1" class="w-full h-1 bg-neutral-900 rounded appearance-none cursor-pointer accent-teal-500">
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex justify-between items-center text-[9px] font-mono text-neutral-400">
+                            <span>MASTER VOL</span>
+                            <span id="lbl-val-volume" class="text-lime-400 font-bold">80%</span>
+                        </div>
+                        <input id="slider-param-volume" type="range" min="0" max="100" value="80" step="1" class="w-full h-1 bg-neutral-900 rounded appearance-none cursor-pointer accent-lime-500">
+
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex justify-between items-center text-[9px] font-mono text-neutral-400">
+                            <span>FILTER GLOW</span>
+                            <span id="lbl-val-cutoff" class="text-teal-400 font-bold">2000Hz</span>
+                        </div>
+                        <input id="slider-param-cutoff" type="range" min="200" max="8000" value="2000" step="50" class="w-full h-1 bg-neutral-900 rounded appearance-none cursor-pointer accent-teal-500">
+                    </div>
+                </div>
+
+                <div class="flex flex-col space-y-1 bg-black p-2 rounded border border-neutral-900 justify-center">
+                    <div class="flex flex-col">
+                        <div class="flex justify-between items-center text-[9px] font-mono text-neutral-400">
+                            <span>ATTACK TIME</span>
+                            <span id="lbl-val-attack" class="text-neutral-300 font-semibold">0.05s</span>
+                        </div>
+                        <input id="slider-param-attack" type="range" min="0.01" max="1.0" value="0.05" step="0.01" class="w-full h-1 bg-neutral-900 rounded appearance-none cursor-pointer accent-neutral-400">
+                    </div>
+                    <div class="flex flex-col">
+
+                        <div class="flex justify-between items-center text-[9px] font-mono text-slate-400">
+                            <span>RELEASE TIME</span>
+                            <span id="lbl-val-release" class="text-neutral-300 font-semibold">0.30s</span>
+                        </div>
+                        <input id="slider-param-release" type="range" min="0.05" max="2.0" value="0.30" step="0.01" class="w-full h-1 bg-neutral-900 rounded appearance-none cursor-pointer accent-neutral-400">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side Element: Expanded Storage Slots Array with Deletion Controls -->
+            <div class="col-span-4 flex items-center justify-between pl-1">
+                <button id="btn-global-play" class="p-2.5 bg-lime-600 hover:bg-lime-500 text-black font-bold rounded shadow active:scale-95 transition-all mr-1 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" id="play-icon" class="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button id="btn-global-clear" class="p-2.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 rounded border border-neutral-800 active:scale-95 transition-all mr-2 shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+
+                    </svg>
+                </button>
+
+                <!-- Memory Slots Structure -->
+                <div class="flex flex-col space-y-1 flex-1 pr-1.5">
+                    <div class="grid grid-cols-4 gap-1">
+                        <!-- Slot M1 -->
+                        <div class="slot-control-card flex flex-col items-center bg-black p-1.5 rounded border border-neutral-800 text-[8px] relative group/slot" data-slot-id="0">
+                            <button class="slot-delete-btn absolute -top-1 -right-1 hidden group-hover/slot:flex w-3 h-3 bg-red-600 hover:bg-red-500 rounded-full text-white text-[7px] items-center justify-center font-bold z-10 shadow">×</button>
+                            <span class="font-bold text-neutral-400 font-mono">M1</span>
+                            <div class="flex space-x-1 my-1">
+                                <button class="slot-save-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-teal-400 font-bold">↓</button>
+                                <button class="slot-load-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-lime-400 font-bold opacity-40 cursor-not-allowed" disabled>↑</button>
+                            </div>
+                            <input type="checkbox" class="slot-engage-toggle hidden">
+                            <div class="w-4 h-2 bg-neutral-800 rounded-full relative cursor-pointer check-slider transition-colors duration-200">
+                                <div class="dot absolute top-[1px] left-[2px] bg-neutral-500 rounded-full h-1.5 w-1.5 transition-transform duration-200"></div>
+                            </div>
+                        </div>
+
+                        <!-- Slot M2 -->
+                        <div class="slot-control-card flex flex-col items-center bg-black p-1.5 rounded border border-neutral-800 text-[8px] relative group/slot" data-slot-id="1">
+                            <button class="slot-delete-btn absolute -top-1 -right-1 hidden group-hover/slot:flex w-3 h-3 bg-red-600 hover:bg-red-500 rounded-full text-white text-[7px] items-center justify-center font-bold z-10 shadow">×</button>
+                            <span class="font-bold text-neutral-400 font-mono">M2</span>
+                            <div class="flex space-x-1 my-1">
+                                <button class="slot-save-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-teal-400 font-bold">↓</button>
+                                <button class="slot-load-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-lime-400 font-bold opacity-40 cursor-not-allowed" disabled>↑</button>
+                            </div>
+                            <input type="checkbox" class="slot-engage-toggle hidden">
+                            <div class="w-4 h-2 bg-neutral-800 rounded-full relative cursor-pointer check-slider transition-colors duration-200">
+                                <div class="dot absolute top-[1px] left-[2px] bg-neutral-500 rounded-full h-1.5 w-1.5 transition-transform duration-200"></div>
+                            </div>
+                        </div>
+                        <!-- Slot M3 -->
+                        <div class="slot-control-card flex flex-col items-center bg-black p-1.5 rounded border border-neutral-800 text-[8px] relative group/slot" data-slot-id="2">
+                            <button class="slot-delete-btn absolute -top-1 -right-1 hidden group-hover/slot:flex w-3 h-3 bg-red-600 hover:bg-red-500 rounded-full text-white text-[7px] items-center justify-center font-bold z-10 shadow">×</button>
+                            <span class="font-bold text-neutral-400 font-mono">M3</span>
+                            <div class="flex space-x-1 my-1">
+                                <button class="slot-save-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-teal-400 font-bold">↓</button>
+
+                                <button class="slot-load-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-lime-400 font-bold opacity-40 cursor-not-allowed" disabled>↑</button>
+                            </div>
+                            <input type="checkbox" class="slot-engage-toggle hidden">
+                            <div class="w-4 h-2 bg-neutral-800 rounded-full relative cursor-pointer check-slider transition-colors duration-200">
+                                <div class="dot absolute top-[1px] left-[2px] bg-neutral-500 rounded-full h-1.5 w-1.5 transition-transform duration-200"></div>
+                            </div>
+                        </div>
+                        <!-- Slot M4 -->
+                        <div class="slot-control-card flex flex-col items-center bg-black p-1.5 rounded border border-neutral-800 text-[8px] relative group/slot" data-slot-id="3">
+                            <button class="slot-delete-btn absolute -top-1 -right-1 hidden group-hover/slot:flex w-3 h-3 bg-red-600 hover:bg-red-500 rounded-full text-white text-[7px] items-center justify-center font-bold z-10 shadow">×</button>
+                            <span class="font-bold text-neutral-400 font-mono">M4</span>
+                            <div class="flex space-x-1 my-1">
+                                <button class="slot-save-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-teal-400 font-bold">↓</button>
+                                <button class="slot-load-btn px-1 py-0.5 bg-neutral-900 hover:bg-neutral-800 rounded text-lime-400 font-bold opacity-40 cursor-not-allowed" disabled>↑</button>
+                            </div>
+                            <input type="checkbox" class="slot-engage-toggle hidden">
+                            <div class="w-4 h-2 bg-neutral-800 rounded-full relative cursor-pointer check-slider transition-colors duration-200">
+                                <div class="dot absolute top-[1px] left-[2px] bg-neutral-500 rounded-full h-1.5 w-1.5 transition-transform duration-200"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-audio-export" class="h-10 px-2.5 bg-neutral-100 hover:bg-neutral-200 font-bold font-mono text-black rounded text-[10px] uppercase tracking-wider shrink-0 border border-neutral-700">
+                    <span>Export</span>
+                </button>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- Main Studio Script Engine Logic -->
+    <script>
+        // --- Core Application State Matrix ---
+        let audioContext = null;
+        let masterGainNode = null;
+        let mainDistortionNode = null;
+        
+
+        // Atmosphere/Ambiance Node References
+        let spaceAmbianceNode = null;
+        let spaceAmbianceGain = null;
+        let wobbleStaticNode = null;
+        let wobbleStaticGain = null;
+        let wobbleLfoNode = null;
+
+        // Custom Parallel Global FX Reference Nodes
+        let etherealWetGain = null;
+        let sinisterRingGain = null;
+        let sinisterModGain = null;
+        let psychedelicWetGain = null;
+
+        // Recording & Export Variables
+        let mediaStreamDestination = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecordingMaster = false;
+
+
+        const canvas = document.getElementById('synth-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const scaleNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const baseMidiAnchor = 48; // Starts at C3
+
+        const state = {
+            isPlaying: true,
+            bpm: 120,
+            masterVolume: 0.8,
+            filterCutoff: 2000,
+            envelope: { attack: 0.05, release: 0.30 },
+            fx: {
+                overdrive: false,
+                fuzz: false,
+                crush: false,
+                grunge: false,
+                space: false,
+                wobble: false,
+
+                ethereal: false,
+                sinister: false,
+                psychedelic: false,
+                smooth: false
+            },
+            selectedShape: 'circle',
+            activeNodes: [],
+            slots: [null, null, null, null],
+            slotEngaged: [false, false, false, false],
+            playheadX: 0,
+            lastPlayheadX: 0,
+            loopDurationBeats: 16, 
+            nodeSize: 15,
+            draggedNode: null,
+            activeTailNode: null, 
+            curvingTailNode: null, 
+            gridRows: 24 
+        };
+
+
+        let audioVisualRipples = [];
+
+        // --- LocalStorage Automation Storage Handlers ---
+        function persistStudioStateToStorage() {
+            try {
+                const simplifiedNodes = state.activeNodes.map(n => ({
+                    shape: n.shape,
+                    pctX: n.pctX,
+                    pctY: n.pctY,
+                    fineTuneOffset: n.fineTuneOffset || 0,
+                    tailX: n.tailX,
+                    tailY: n.tailY,
+                    curveOffset: n.curveOffset || 0
+                }));
+                localStorage.setItem('soundline_active_arrangement', JSON.stringify(simplifiedNodes));
+                
+                const simplifiedSlots = state.slots.map(slot => {
+                    if (!slot) return null;
+                    return slot.map(n => ({
+
+                        shape: n.shape,
+                        pctX: n.pctX,
+                        pctY: n.pctY,
+                        fineTuneOffset: n.fineTuneOffset || 0,
+                        tailX: n.tailX,
+                        tailY: n.tailY,
+                        curveOffset: n.curveOffset || 0
+                    }));
+                });
+                localStorage.setItem('soundline_memory_slots', JSON.stringify(simplifiedSlots));
+            } catch (err) {
+                console.warn("Storage replication error: ", err);
+            }
+        }
+
+        function loadStudioStateFromStorage() {
+            try {
+                const storedArrangement = localStorage.getItem('soundline_active_arrangement');
+                if (storedArrangement) {
+
+                    const parsed = JSON.parse(storedArrangement);
+                    state.activeNodes = parsed.map((n, idx) => ({
+                        id: 'node_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substr(2, 4),
+                        ...n
+                    }));
+                }
+
+                const storedSlots = localStorage.getItem('soundline_memory_slots');
+                if (storedSlots) {
+                    const parsedSlots = JSON.parse(storedSlots);
+                    parsedSlots.forEach((slot, id) => {
+                        if (slot) {
+                            state.slots[id] = slot.map((n, idx) => ({
+                                id: 'slot_' + id + '_' + Date.now() + '_' + idx,
+                                ...n
+                            }));
+                            refreshSlotUIState(id);
+                        }
+                    });
+
+                }
+            } catch (err) {
+                console.warn("Error unpacking data array maps: ", err);
+            }
+        }
+
+        function convertMidiToFrequency(midiNoteNumber) {
+            return 440 * Math.pow(2, (midiNoteNumber - 69) / 12);
+        }
+
+        function getDynamicNoteLabel(rowYIndex, semiOffset = 0) {
+            const invertedRow = (state.gridRows - 1) - rowYIndex;
+            const targetMidiNumber = baseMidiAnchor + invertedRow + semiOffset;
+            const positionName = scaleNames[((targetMidiNumber % 12) + 12) % 12];
+            const octaveNumber = Math.floor(targetMidiNumber / 12) - 1;
+            return {
+                name: `${positionName}${octaveNumber}`,
+                frequency: convertMidiToFrequency(targetMidiNumber)
+            };
+
+        }
+
+        function triggerStudioToast(message, variant = 'info') {
+            const container = document.getElementById('toast-container');
+            const element = document.createElement('div');
+            element.className = `px-3 py-1.5 rounded text-xs font-mono font-bold border backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0 flex items-center space-x-2 `;
+            
+            if (variant === 'success') element.className += 'bg-black text-lime-400 border-lime-500/40';
+            else if (variant === 'rose') element.className += 'bg-black text-neutral-200 border-neutral-700';
+            else element.className += 'bg-black text-teal-400 border-teal-500/40';
+
+            element.innerHTML = `<span>■</span> <span>${message}</span>`;
+            container.appendChild(element);
+            setTimeout(() => element.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                element.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => element.remove(), 250);
+            }, 2500);
+        }
+
+
+        function computeDistortionCurveMatrix() {
+            const arrayLength = 44100;
+            const curveBuffer = new Float32Array(arrayLength);
+            
+            let driveAmount = 0;
+            if (state.fx.overdrive) driveAmount = 20;
+            if (state.fx.fuzz) driveAmount = 90;
+            if (state.fx.grunge) driveAmount = 180; 
+            
+            for (let i = 0; i < arrayLength; ++i) {
+                let x = (i * 2) / arrayLength - 1;
+                
+                if (state.fx.crush) {
+                    const bitsSteps = 5; 
+                    x = Math.round(x * bitsSteps) / bitsSteps;
+                }
+
+                if (state.fx.overdrive || state.fx.fuzz || state.fx.grunge) {
+                    const deg = Math.PI / 180;
+
+                    if (state.fx.grunge && x > 0.1) {
+                        x = Math.sin(x * 1.2);
+                    }
+                    curveBuffer[i] = (3 + driveAmount) * x * 20 * deg / (Math.PI + driveAmount * Math.abs(x));
+                } else {
+                    curveBuffer[i] = x;
+                }
+            }
+            
+            if (mainDistortionNode) {
+                mainDistortionNode.curve = curveBuffer;
+            }
+        }
+
+        function createNoiseAtmosphereBuffer() {
+            const bufferSize = audioContext.sampleRate * 4; 
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const dataChannel = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+
+                dataChannel[i] = Math.random() * 2 - 1;
+            }
+            return buffer;
+        }
+
+        function updateAtmosphericEffectsNodes() {
+            if (!audioContext) return;
+            const now = audioContext.currentTime;
+
+            if (state.fx.space) {
+                if (!spaceAmbianceNode) {
+                    spaceAmbianceNode = audioContext.createBufferSource();
+                    spaceAmbianceNode.buffer = createNoiseAtmosphereBuffer();
+                    spaceAmbianceNode.loop = true;
+
+                    const spaceFilter = audioContext.createBiquadFilter();
+                    spaceFilter.type = 'lowpass';
+                    spaceFilter.frequency.setValueAtTime(450, now);
+
+
+                    spaceAmbianceGain = audioContext.createGain();
+                    spaceAmbianceGain.gain.setValueAtTime(0, now);
+                    
+                    spaceAmbianceNode.connect(spaceFilter);
+                    spaceFilter.connect(spaceAmbianceGain);
+                    spaceAmbianceGain.connect(masterGainNode);
+                    spaceAmbianceNode.start(0);
+                }
+                spaceAmbianceGain.gain.linearRampToValueAtTime(0.04, now + 0.5);
+            } else {
+                if (spaceAmbianceGain) {
+                    spaceAmbianceGain.gain.linearRampToValueAtTime(0, now + 0.4);
+                }
+            }
+
+            if (state.fx.wobble) {
+                if (!wobbleStaticNode) {
+                    wobbleStaticNode = audioContext.createBufferSource();
+                    wobbleStaticNode.buffer = createNoiseAtmosphereBuffer();
+
+                    wobbleStaticNode.loop = true;
+
+                    const wobbleFilter = audioContext.createBiquadFilter();
+                    wobbleFilter.type = 'bandpass';
+                    wobbleFilter.frequency.setValueAtTime(800, now);
+                    wobbleFilter.Q.setValueAtTime(3.0, now);
+
+                    wobbleStaticGain = audioContext.createGain();
+                    wobbleStaticGain.gain.setValueAtTime(0, now);
+
+                    wobfoNode = audioContext.createOscillator();
+                    wobfoNode.type = 'sine';
+                    wobfoNode.frequency.setValueAtTime(7, now);
+
+                    const lfoGain = audioContext.createGain();
+                    lfoGain.gain.setValueAtTime(600, now);
+
+                    wobfoNode.connect(lfoGain);
+                    lfoGain.connect(wobbleFilter.frequency);
+
+                    
+                    wobbleStaticNode.connect(wobbleFilter);
+                    wobbleFilter.connect(wobbleStaticGain);
+                    wobbleStaticGain.connect(mainDistortionNode);
+                    
+                    wobfoNode.start(0);
+                    wobbleStaticNode.start(0);
+                }
+            }
+        }
+
+        function setupGlobalFxNodes() {
+            const now = audioContext.currentTime;
+
+            const ethDelay = audioContext.createDelay(1.0);
+            ethDelay.delayTime.setValueAtTime(0.35, now);
+            const ethFilter = audioContext.createBiquadFilter();
+            ethFilter.type = 'highpass';
+            ethFilter.frequency.setValueAtTime(2800, now);
+
+            const ethFeedback = audioContext.createGain();
+            ethFeedback.gain.setValueAtTime(0.6, now);
+            etherealWetGain = audioContext.createGain();
+            etherealWetGain.gain.setValueAtTime(0, now);
+
+            mainDistortionNode.connect(ethDelay);
+            ethDelay.connect(ethFilter);
+            ethFilter.connect(ethFeedback);
+            ethFeedback.connect(ethDelay); 
+            ethFilter.connect(etherealWetGain);
+            etherealWetGain.connect(masterGainNode);
+
+            sinisterRingGain = audioContext.createGain();
+            sinisterRingGain.gain.setValueAtTime(1.0, now);
+            
+            const sinisterOsc = audioContext.createOscillator();
+            sinisterOsc.type = 'sawtooth';
+            sinisterOsc.frequency.setValueAtTime(32, now); 
+            
+
+            sinisterModGain = audioContext.createGain();
+            sinisterModGain.gain.setValueAtTime(0, now); 
+
+            sinisterOsc.connect(sinisterModGain);
+            sinisterModGain.connect(sinisterRingGain.gain);
+            sinisterOsc.start(now);
+
+            mainDistortionNode.connect(sinisterRingGain);
+            sinisterRingGain.connect(masterGainNode);
+
+            const psychDelay = audioContext.createDelay(0.1);
+            psychDelay.delayTime.setValueAtTime(0.012, now);
+            
+            const psychLfo = audioContext.createOscillator();
+            psychLfo.type = 'sine';
+            psychLfo.frequency.setValueAtTime(0.5, now); 
+            
+            const psychLfoGain = audioContext.createGain();
+            psychLfoGain.gain.setValueAtTime(0.007, now); 
+
+
+            psychLfo.connect(psychLfoGain);
+            psychLfoGain.connect(psychDelay.delayTime);
+            psychLfo.start(now);
+
+            psychedelicWetGain = audioContext.createGain();
+            psychedelicWetGain.gain.setValueAtTime(0, now);
+
+            mainDistortionNode.connect(psychDelay);
+            psychDelay.connect(psychedelicWetGain);
+            psychedelicWetGain.connect(masterGainNode);
+        }
+
+        function updateGlobalFxParameters() {
+            if (!audioContext) return;
+            const now = audioContext.currentTime;
+
+            if (etherealWetGain) {
+                etherealWetGain.gain.linearRampToValueAtTime(state.fx.ethereal ? 0.65 : 0, now + 0.05);
+            }
+
+            if (sinisterModGain) {
+                sinisterModGain.gain.linearRampToValueAtTime(state.fx.sinister ? 0.75 : 0, now + 0.05);
+            }
+            if (psychedelicWetGain) {
+                psychedelicWetGain.gain.linearRampToValueAtTime(state.fx.psychedelic ? 0.8 : 0, now + 0.05);
+            }
+        }
+
+        function initAudioEngine() {
+            if (audioContext) return;
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            audioContext = new AudioContextClass();
+            
+            masterGainNode = audioContext.createGain();
+            masterGainNode.gain.setValueAtTime(state.masterVolume, audioContext.currentTime);
+
+            mainDistortionNode = audioContext.createWaveShaper();
+            mainDistortionNode.oversample = '4x';
+            computeDistortionCurveMatrix();
+
+
+            setupGlobalFxNodes();
+
+            mainDistortionNode.connect(masterGainNode);
+            masterGainNode.connect(audioContext.destination);
+
+            mediaStreamDestination = audioContext.createMediaStreamDestination();
+            masterGainNode.connect(mediaStreamDestination);
+
+            document.getElementById('audio-welcome-overlay').classList.add('opacity-0', 'pointer-events-none');
+            updateAtmosphericEffectsNodes();
+            updateGlobalFxParameters();
+        }
+
+        function generateWhiteNoiseBuffer() {
+            const bufferSize = audioContext.sampleRate * 0.25; 
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const dataChannel = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) dataChannel[i] = Math.random() * 2 - 1;
+            return buffer;
+
+        }
+
+        function triggerNodeSynthesizer(shapeType, startFreq, targetVol, tailConfig = null) {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') audioContext.resume();
+
+            const now = audioContext.currentTime;
+            
+            if (state.fx.wobble && wobbleStaticGain) {
+                wobbleStaticGain.gain.cancelScheduledValues(now);
+                wobbleStaticGain.gain.setValueAtTime(0.08, now);
+                wobbleStaticGain.gain.exponentialRampToValueAtTime(0.0001, now + state.envelope.release + 0.2);
+            }
+
+            const instrumentGainNode = audioContext.createGain();
+            instrumentGainNode.gain.setValueAtTime(0, now);
+            instrumentGainNode.connect(mainDistortionNode);
+
+            let primaryOsc = null;
+
+            let secondaryOsc = null;
+            let thirdOsc = null;
+            let noiseSource = null;
+
+            let verifiedAttack = state.fx.smooth ? Math.max(state.envelope.attack, 0.45) : state.envelope.attack;
+            let verifiedRelease = state.fx.smooth ? Math.max(state.envelope.release, 0.9) : state.envelope.release;
+            let finalDuration = verifiedAttack + verifiedRelease;
+
+            const beatDurationSec = 60 / state.bpm;
+            const fullCycleTime = beatDurationSec * state.loopDurationBeats;
+
+            let hasTail = tailConfig && tailConfig.tailX !== undefined && tailConfig.tailX !== null;
+            let tailLengthPct = hasTail ? Math.abs(tailConfig.tailX - tailConfig.pctX) : 0;
+            let tailDurationSec = tailLengthPct * fullCycleTime;
+
+            if (hasTail) {
+                if (tailConfig.tailX < tailConfig.pctX) {
+                    instrumentGainNode.gain.setValueAtTime(0, now);
+                    instrumentGainNode.gain.linearRampToValueAtTime(targetVol, now + tailDurationSec);
+
+                    instrumentGainNode.gain.exponentialRampToValueAtTime(0.0001, now + tailDurationSec + verifiedRelease);
+                    finalDuration = tailDurationSec + verifiedRelease;
+                } else {
+                    instrumentGainNode.gain.setValueAtTime(0, now);
+                    instrumentGainNode.gain.linearRampToValueAtTime(targetVol, now + verifiedAttack);
+                    instrumentGainNode.gain.linearRampToValueAtTime(targetVol * 0.4, now + verifiedAttack + tailDurationSec * 0.6);
+                    instrumentGainNode.gain.exponentialRampToValueAtTime(0.0001, now + verifiedAttack + tailDurationSec + 0.1);
+                    finalDuration = verifiedAttack + tailDurationSec + 0.2;
+                }
+            } else {
+                instrumentGainNode.gain.setValueAtTime(0, now);
+                instrumentGainNode.gain.linearRampToValueAtTime(targetVol, now + verifiedAttack);
+                instrumentGainNode.gain.exponentialRampToValueAtTime(0.0001, now + verifiedAttack + verifiedRelease);
+            }
+
+            function scheduleOscillatorPitchCurve(oscNode, multiplier = 1.0) {
+                if (!hasTail) {
+                    oscNode.frequency.setValueAtTime(startFreq * multiplier, now);
+                    return;
+
+                }
+                
+                oscNode.frequency.setValueAtTime(startFreq * multiplier, now);
+                const steps = 30;
+                const startY = tailConfig.pctY;
+                const endY = tailConfig.tailY;
+                const curveOffsetPct = tailConfig.curveOffsetPct || 0;
+
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const currentPctY = (1-t)*(1-t)*startY + 2*(1-t)*t*(startY + (endY - startY)*0.5 + curveOffsetPct) + t*t*endY;
+                    const safePctY = Math.max(0, Math.min(currentPctY, 1.0));
+                    const targetRow = Math.floor(safePctY * state.gridRows);
+                    const safeRow = Math.max(0, Math.min(targetRow, state.gridRows - 1));
+                    const currentFreq = getDynamicNoteLabel(safeRow, tailConfig.fineTuneOffset || 0).frequency;
+                    
+                    oscNode.frequency.linearRampToValueAtTime(currentFreq * multiplier, now + (t * tailDurationSec));
+                }
+            }
+
+
+            switch(shapeType) {
+                case 'circle': 
+                    primaryOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'sine';
+                    scheduleOscillatorPitchCurve(primaryOsc, 1.0);
+                    primaryOsc.connect(instrumentGainNode);
+                    primaryOsc.start(now);
+                    primaryOsc.stop(now + finalDuration + 0.1);
+                    break;
+
+                case 'square': 
+                    primaryOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'square';
+                    scheduleOscillatorPitchCurve(primaryOsc, 1.0);
+                    const fFilter = audioContext.createBiquadFilter();
+                    fFilter.type = 'lowpass';
+                    fFilter.frequency.setValueAtTime(state.fx.smooth ? Math.min(state.filterCutoff * 0.2, 500) : state.filterCutoff * 0.5, now);
+                    primaryOsc.connect(fFilter);
+                    fFilter.connect(instrumentGainNode);
+
+                    primaryOsc.start(now);
+                    primaryOsc.stop(now + finalDuration + 0.1);
+                    break;
+
+                case 'diamond': 
+                    primaryOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'sawtooth';
+                    scheduleOscillatorPitchCurve(primaryOsc, 1.0);
+                    const hFilter = audioContext.createBiquadFilter();
+                    hFilter.type = 'lowpass';
+                    hFilter.frequency.setValueAtTime(state.fx.smooth ? 150 : 300, now);
+                    hFilter.frequency.exponentialRampToValueAtTime(state.fx.smooth ? 450 : state.filterCutoff, now + 0.08);
+                    primaryOsc.connect(hFilter);
+                    hFilter.connect(instrumentGainNode);
+                    primaryOsc.start(now);
+                    primaryOsc.stop(now + finalDuration + 0.1);
+                    break;
+
+                case 'rectangle': 
+
+                    primaryOsc = audioContext.createOscillator();
+                    secondaryOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'sine';
+                    secondaryOsc.type = 'triangle';
+                    scheduleOscillatorPitchCurve(primaryOsc, 1.0);
+                    scheduleOscillatorPitchCurve(secondaryOsc, 2.0);
+                    
+                    const mixGain = audioContext.createGain();
+                    mixGain.gain.setValueAtTime(0.3, now);
+                    primaryOsc.connect(instrumentGainNode);
+                    secondaryOsc.connect(mixGain);
+                    mixGain.connect(instrumentGainNode);
+                    primaryOsc.start(now);
+                    secondaryOsc.start(now);
+                    primaryOsc.stop(now + finalDuration + 0.1);
+                    secondaryOsc.stop(now + finalDuration + 0.1);
+                    break;
+
+                case 'pentagon': 
+
+                    primaryOsc = audioContext.createOscillator();
+                    secondaryOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'sine';
+                    secondaryOsc.type = 'sine';
+                    scheduleOscillatorPitchCurve(primaryOsc, 1.0);
+                    scheduleOscillatorPitchCurve(secondaryOsc, 2.71);
+                    
+                    primaryOsc.connect(instrumentGainNode);
+                    const metalGain = audioContext.createGain();
+                    metalGain.gain.setValueAtTime(0.25, now);
+                    secondaryOsc.connect(metalGain);
+                    metalGain.connect(instrumentGainNode);
+                    primaryOsc.start(now);
+                    secondaryOsc.start(now);
+                    primaryOsc.stop(now + finalDuration + 0.1);
+                    secondaryOsc.stop(now + finalDuration + 0.1);
+                    break;
+
+                case 'star': 
+
+                    primaryOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'sawtooth';
+                    primaryOsc.frequency.setValueAtTime(startFreq * 2.5, now);
+                    primaryOsc.frequency.exponentialRampToValueAtTime(startFreq * 0.4, now + 0.15);
+                    primaryOsc.connect(instrumentGainNode);
+                    primaryOsc.start(now);
+                    primaryOsc.stop(now + finalDuration + 0.1);
+                    break;
+
+                case 'backslash': 
+                    primaryOsc = audioContext.createOscillator();
+                    secondaryOsc = audioContext.createOscillator();
+                    thirdOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'sawtooth';
+                    secondaryOsc.type = 'sawtooth';
+                    thirdOsc.type = 'triangle';
+
+                    scheduleOscillatorPitchCurve(primaryOsc, 0.98);
+                    scheduleOscillatorPitchCurve(secondaryOsc, 1.49);
+
+                    scheduleOscillatorPitchCurve(thirdOsc, 2.0);
+                    
+                    const gFilter = audioContext.createBiquadFilter();
+                    gFilter.type = 'bandpass';
+                    gFilter.frequency.setValueAtTime(startFreq * 1.5, now);
+                    primaryOsc.connect(gFilter);
+                    secondaryOsc.connect(gFilter);
+                    thirdOsc.connect(gFilter);
+                    gFilter.connect(instrumentGainNode);
+                    primaryOsc.start(now);
+                    secondaryOsc.start(now);
+                    thirdOsc.start(now);
+                    primaryOsc.stop(now + finalDuration + 0.1);
+                    secondaryOsc.stop(now + finalDuration + 0.1);
+                    thirdOsc.stop(now + finalDuration + 0.1);
+                    break;
+
+                case 'triangle': 
+                    noiseSource = audioContext.createBufferSource();
+
+                    noiseSource.buffer = generateWhiteNoiseBuffer();
+                    const sFilter = audioContext.createBiquadFilter();
+                    sFilter.type = 'highpass';
+                    sFilter.frequency.setValueAtTime(state.fx.smooth ? 600 : 1000, now);
+                    noiseSource.connect(sFilter);
+                    sFilter.connect(instrumentGainNode);
+                    noiseSource.start(now);
+                    noiseSource.stop(now + 0.18);
+                    break;
+
+                case 'cross': 
+                    noiseSource = audioContext.createBufferSource();
+                    noiseSource.buffer = generateWhiteNoiseBuffer();
+                    const hatFilter = audioContext.createBiquadFilter();
+                    hatFilter.type = 'highpass';
+                    hatFilter.frequency.setValueAtTime(state.fx.smooth ? 4000 : 7500, now);
+                    noiseSource.connect(hatFilter);
+                    hatFilter.connect(instrumentGainNode);
+                    instrumentGainNode.gain.cancelScheduledValues(now);
+
+                    instrumentGainNode.gain.setValueAtTime(0, now);
+                    instrumentGainNode.gain.linearRampToValueAtTime(targetVol, now + 0.005);
+                    instrumentGainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+                    noiseSource.start(now);
+                    noiseSource.stop(now + 0.05);
+                    break;
+
+                case 'hexagon': 
+                    primaryOsc = audioContext.createOscillator();
+                    primaryOsc.type = 'sine';
+                    const kBase = startFreq * 0.25 < 35 ? 35 : (startFreq * 0.25 > 150 ? 150 : startFreq * 0.25);
+                    primaryOsc.frequency.setValueAtTime(kBase * 4, now);
+                    primaryOsc.frequency.exponentialRampToValueAtTime(kBase, now + 0.09);
+                    primaryOsc.connect(instrumentGainNode);
+                    primaryOsc.start(now);
+                    primaryOsc.stop(now + 0.3);
+                    break;
+            }
+        }
+
+
+        // --- Visual Interface Layout Render Canvas Flow ---
+        function resizeCanvasContext() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        // Keep node sizing consistent
+        function getShapeHexColor(shape) {
+            switch(shape) {
+                case 'circle': return '#22d3ee'; 
+                case 'triangle': return '#ec4899'; 
+                case 'square': return '#f59e0b'; 
+                case 'diamond': return '#a855f7'; 
+                case 'hexagon': return '#84cc16'; 
+                case 'rectangle': return '#f43f5e'; 
+                case 'pentagon': return '#2dd4bf'; 
+                case 'star': return '#facc15'; 
+                case 'cross': return '#94a3b8'; 
+
+                case 'backslash': return '#ef4444'; 
+                default: return '#64748b';
+            }
+        }
+
+        function drawShapeVector(context, x, y, size, shape, type = 'fill') {
+            context.beginPath();
+            if (shape === 'circle') {
+                context.arc(x, y, size, 0, Math.PI * 2);
+            } else if (shape === 'triangle') {
+                context.moveTo(x, y - size);
+                context.lineTo(x + size * 1.2, y + size);
+                context.lineTo(x - size * 1.2, y + size);
+                context.closePath();
+            } else if (shape === 'square') {
+                context.rect(x - size, y - size, size * 2, size * 2);
+            } else if (shape === 'diamond') {
+                context.moveTo(x, y - size * 1.3);
+                context.lineTo(x + size * 1.3, y);
+
+                context.lineTo(x, y + size * 1.3);
+                context.lineTo(x - size * 1.3, y);
+                context.closePath();
+            } else if (shape === 'hexagon') {
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    context.lineTo(x + size * 1.2 * Math.cos(angle), y + size * 1.2 * Math.sin(angle));
+                }
+                context.closePath();
+            } else if (shape === 'rectangle') {
+                context.rect(x - size * 0.6, y - size * 1.3, size * 1.2, size * 2.6);
+            } else if (shape === 'pentagon') {
+                for (let i = 0; i < 5; i++) {
+                    const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                    context.lineTo(x + size * 1.25 * Math.cos(angle), y + size * 1.25 * Math.sin(angle));
+                }
+                context.closePath();
+            } else if (shape === 'star') {
+                for (let i = 0; i < 10; i++) {
+
+                    const angle = (Math.PI / 5) * i - Math.PI / 2;
+                    const r = i % 2 === 0 ? size * 1.4 : size * 0.6;
+                    context.lineTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
+                }
+                context.closePath();
+            } else if (shape === 'cross') {
+                context.rect(x - size, y - size * 0.3, size * 2, size * 0.6);
+                context.rect(x - size * 0.3, y - size, size * 0.6, size * 2);
+            } else if (shape === 'backslash') {
+                context.moveTo(x - size * 1.1, y - size * 1.1);
+                context.lineTo(x + size * 1.1, y + size * 1.1);
+                context.lineWidth = 5;
+                context.strokeStyle = context.fillStyle;
+                context.stroke();
+                return;
+            }
+
+            if (type === 'fill') context.fill();
+            else context.stroke();
+
+        }
+
+        function renderSynthesizerMatrix() {
+            ctx.fillStyle = '#000000'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const rowHeight = canvas.height / state.gridRows;
+
+            for (let i = 0; i < state.gridRows; i++) {
+                const pitchDetails = getDynamicNoteLabel(i, 0);
+                ctx.strokeStyle = pitchDetails.name.includes('#') ? 'rgba(38, 38, 38, 0.4)' : 'rgba(64, 64, 64, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, i * rowHeight);
+                ctx.lineTo(canvas.width, i * rowHeight);
+                ctx.stroke();
+
+                ctx.fillStyle = pitchDetails.name.includes('#') ? '#404040' : '#737373';
+                ctx.font = '9px monospace';
+
+                ctx.fillText(pitchDetails.name, 6, i * rowHeight + rowHeight / 2 + 3);
+            }
+
+            const beatWidth = canvas.width / state.loopDurationBeats;
+            for (let b = 1; b < state.loopDurationBeats; b++) {
+                ctx.strokeStyle = (b % 4 === 0) ? '#262626' : '#171717';
+                ctx.lineWidth = (b % 4 === 0) ? 2 : 1;
+                ctx.beginPath();
+                ctx.moveTo(b * beatWidth, 0);
+                ctx.lineTo(b * beatWidth, canvas.height);
+                ctx.stroke();
+            }
+
+            function drawEnvelopeTailVector(node, opacityModifier = 1.0) {
+                if (node.tailX === undefined || node.tailX === null) return;
+                
+                const startX = node.pctX * canvas.width;
+                const startY = node.pctY * canvas.height;
+                const endX = node.tailX * canvas.width;
+
+                const endY = node.tailY * canvas.height;
+                const color = getShapeHexColor(node.shape);
+
+                ctx.save();
+                ctx.globalAlpha = 0.7 * opacityModifier;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 7; 
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+                
+                if (node.tailX < node.pctX) ctx.setLineDash([4, 4]);
+
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                
+                const midX = (startX + endX) / 2;
+                const midY = (startY + endY) / 2 + (node.curveOffset || 0);
+
+                if (node.curveOffset) {
+
+                    ctx.quadraticCurveTo(midX, midY, endX, endY);
+                } else {
+                    ctx.lineTo(endX, endY);
+                }
+                ctx.stroke();
+
+                if (opacityModifier === 1.0) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.arc(midX, midY, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                if (opacityModifier === 1.0) {
+                    ctx.fillStyle = color;
+
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.shadowBlur = 4;
+                    ctx.beginPath();
+                    ctx.arc(endX, endY, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            for (let s = 0; s < 4; s++) {
+                if (state.slotEngaged[s] && state.slots[s]) {
+                    state.slots[s].forEach(node => {
+                        drawEnvelopeTailVector(node, 0.3);
+                        const targetX = node.pctX * canvas.width;
+                        const targetY = node.pctY * canvas.height;
+                        ctx.fillStyle = getShapeHexColor(node.shape);
+                        ctx.globalAlpha = 0.15;
+
+                        drawShapeVector(ctx, targetX, targetY, state.nodeSize * 0.9, node.shape, 'fill');
+                    });
+                }
+            }
+
+            state.activeNodes.forEach(node => drawEnvelopeTailVector(node, 1.0));
+
+            state.activeNodes.forEach(node => {
+                const targetX = node.pctX * canvas.width;
+                const targetY = node.pctY * canvas.height;
+                const baseColor = getShapeHexColor(node.shape);
+                
+                const targetRow = Math.floor(node.pctY * state.gridRows);
+                const pitchMeta = getDynamicNoteLabel(Math.max(0, Math.min(targetRow, state.gridRows-1)), node.fineTuneOffset || 0);
+
+                ctx.save();
+                ctx.shadowColor = baseColor;
+                ctx.shadowBlur = (state.draggedNode === node || state.activeTailNode === node) ? 16 : 5;
+                ctx.fillStyle = (state.draggedNode === node) ? '#ffffff' : baseColor;
+
+
+                drawShapeVector(ctx, targetX, targetY, state.nodeSize, node.shape, 'fill');
+                ctx.shadowBlur = 0;
+
+                ctx.font = 'bold 8px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if (node.fineTuneOffset) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(pitchMeta.name, targetX, targetY - 4);
+                    ctx.fillStyle = '#fbbf24'; 
+                    ctx.fillText((node.fineTuneOffset > 0 ? `+${node.fineTuneOffset}` : node.fineTuneOffset), targetX, targetY + 5);
+                } else {
+                    ctx.fillStyle = node.shape === 'backslash' ? '#ffffff' : '#000000';
+                    ctx.fillText(pitchMeta.name, targetX, targetY + 0.5);
+                }
+                ctx.restore();
+            });
+
+
+            audioVisualRipples.forEach((ripple, index) => {
+                ripple.radius += ripple.speed;
+                ripple.alpha -= 0.04;
+                if (ripple.alpha <= 0) {
+                    audioVisualRipples.splice(index, 1);
+                    return;
+                }
+                ctx.save();
+                ctx.strokeStyle = ripple.color;
+                ctx.globalAlpha = ripple.alpha;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            const sweepPixelPosition = state.playheadX * canvas.width;
+            const barGlowGrad = ctx.createLinearGradient(sweepPixelPosition - 15, 0, sweepPixelPosition + 2, 0);
+
+            barGlowGrad.addColorStop(0, 'transparent');
+            barGlowGrad.addColorStop(1, 'rgba(6, 182, 212, 0.45)');
+            ctx.fillStyle = barGlowGrad;
+            ctx.fillRect(sweepPixelPosition - 15, 0, 17, canvas.height);
+
+            ctx.strokeStyle = '#22d3ee';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sweepPixelPosition, 0);
+            ctx.lineTo(sweepPixelPosition, canvas.height);
+            ctx.stroke();
+        }
+
+        // --- Core Time Sequencer Scan Evaluation Automations ---
+        let lastTimestamp = performance.now();
+
+        function runSequencerLoop(timestamp) {
+            const deltaTime = (timestamp - lastTimestamp) / 1000;
+            lastTimestamp = timestamp;
+
+
+            if (state.isPlaying) {
+                const beatDurationSec = 60 / state.bpm;
+                const fullLoopCycleDurationSec = beatDurationSec * state.loopDurationBeats;
+
+                state.lastPlayheadX = state.playheadX;
+                state.playheadX += deltaTime / fullLoopCycleDurationSec;
+
+                if (state.playheadX >= 1.0) {
+                    state.playheadX %= 1.0;
+                    state.lastPlayheadX = 0; 
+                    if (isRecordingMaster) finalizeAudioExportMix();
+                }
+
+                evaluateTimelineTriggers(state.lastPlayheadX, state.playheadX);
+            }
+
+            renderSynthesizerMatrix();
+            requestAnimationFrame(runSequencerLoop);
+        }
+
+
+        function evaluateTimelineTriggers(startPct, endPct) {
+            function checkIntersection(nodeList) {
+                nodeList.forEach(node => {
+                    const hasLeftTail = node.tailX !== undefined && node.tailX !== null && node.tailX < node.pctX;
+                    const triggerPoint = hasLeftTail ? node.tailX : node.pctX;
+
+                    if (triggerPoint > startPct && triggerPoint <= endPct) {
+                        executeNodePlayback(node);
+                    }
+                });
+            }
+            checkIntersection(state.activeNodes);
+            for (let s = 0; s < 4; s++) {
+                if (state.slotEngaged[s] && state.slots[s]) checkIntersection(state.slots[s]);
+            }
+        }
+
+        function executeNodePlayback(node) {
+            const targetRow = Math.floor(node.pctY * state.gridRows);
+
+            const safeRow = Math.max(0, Math.min(targetRow, state.gridRows - 1));
+            const basePitchMeta = getDynamicNoteLabel(safeRow, node.fineTuneOffset || 0);
+
+            const tailPayload = (node.tailX !== undefined && node.tailX !== null) ? {
+                pctX: node.pctX,
+                pctY: node.pctY,
+                tailX: node.tailX,
+                tailY: node.tailY,
+                curveOffsetPct: node.curveOffset / canvas.height,
+                fineTuneOffset: node.fineTuneOffset || 0
+            } : null;
+
+            triggerNodeSynthesizer(node.shape, basePitchMeta.frequency, 0.8, tailPayload);
+
+            const pxX = (tailPayload && tailPayload.tailX < tailPayload.pctX ? tailPayload.tailX : node.pctX) * canvas.width;
+            const pxY = node.pctY * canvas.height;
+
+            audioVisualRipples.push({
+                x: pxX, y: pxY,
+
+                radius: state.nodeSize, alpha: 1.0, speed: 4.2,
+                color: getShapeHexColor(node.shape)
+            });
+        }
+
+        // --- Interaction Event Mapping Adapters ---
+        // Normalized grid location matching
+        function getMouseCoordinatesPct(e) {
+            const boundaryRect = canvas.getBoundingClientRect();
+            const clientX = (e.clientX || (e.touches && e.touches[0].clientX)) - boundaryRect.left;
+            const clientY = (e.clientY || (e.touches && e.touches[0].clientY)) - boundaryRect.top;
+            return {
+                pctX: Math.min(Math.max(clientX / canvas.width, 0.0), 1.0),
+                pctY: Math.min(Math.max(clientY / canvas.height, 0.0), 1.0)
+            };
+        }
+
+        function searchNodeAtCoordinates(pctX, pctY) {
+            const pixelThreshold = 22;
+
+            return state.activeNodes.find(node => {
+                const nPxX = node.pctX * canvas.width;
+                const nPxY = node.pctY * canvas.height;
+                const curPxX = pctX * canvas.width;
+                const curPxY = pctY * canvas.height;
+                const pointDistance = Math.sqrt(Math.pow(nPxX - curPxX, 2) + Math.pow(nPxY - curPxY, 2));
+                return pointDistance <= pixelThreshold;
+            });
+        }
+
+        function searchTailEndpointIntersection(pctX, pctY) {
+            const thresholdPx = 20;
+            return state.activeNodes.find(node => {
+                if (node.tailX === undefined || node.tailX === null) return false;
+                const eX = node.tailX * canvas.width;
+                const eY = node.tailY * canvas.height;
+                const currentPxX = pctX * canvas.width;
+                const currentPxY = pctY * canvas.height;
+                const distance = Math.sqrt(Math.pow(eX - currentPxX, 2) + Math.pow(currentPxY - eY, 2));
+
+                return distance <= thresholdPx;
+            });
+        }
+
+        function searchTailMidpointIntersection(pctX, pctY) {
+            const thresholdPx = 25;
+            return state.activeNodes.find(node => {
+                if (node.tailX === undefined || node.tailX === null) return false;
+                const sX = node.pctX * canvas.width;
+                const sY = node.pctY * canvas.height;
+                const eX = node.tailX * canvas.width;
+                const eY = node.tailY * canvas.height;
+                
+                const midPxX = (sX + eX) / 2;
+                const midPxY = (sY + eY) / 2 + (node.curveOffset || 0);
+
+                const currentPxX = pctX * canvas.width;
+                const currentPxY = pctY * canvas.height;
+
+
+                const distance = Math.sqrt(Math.pow(midPxX - currentPxX, 2) + Math.pow(midPxY - currentPxY, 2));
+                return distance <= thresholdPx;
+            });
+        }
+
+        function handlePointerDown(e) {
+            if (e.button === 2) return; 
+            initAudioEngine();
+
+            const coord = getMouseCoordinatesPct(e);
+            
+            // Priority 1: Check if clicking directly on a tail's end dot handle
+            const endpointNodeMatch = searchTailEndpointIntersection(coord.pctX, coord.pctY);
+            if (endpointNodeMatch) {
+                state.activeTailNode = endpointNodeMatch;
+                return;
+            }
+
+            // Priority 2: Check if clicking directly on a tail's curve center handle dot
+
+            const tailNodeMatch = searchTailMidpointIntersection(coord.pctX, coord.pctY);
+            if (tailNodeMatch) {
+                state.curvingTailNode = tailNodeMatch;
+                return;
+            }
+
+            // Priority 3: Check if clicking on an actual main note body element
+            const targetNode = searchNodeAtCoordinates(coord.pctX, coord.pctY);
+            if (targetNode) {
+                if (e.shiftKey) {
+                    // --- Duplication Logic Block ---
+                    const deltaTailX = (targetNode.tailX !== null && targetNode.tailX !== undefined) ? (targetNode.tailX - targetNode.pctX) : null;
+                    const deltaTailY = (targetNode.tailY !== null && targetNode.tailY !== undefined) ? (targetNode.tailY - targetNode.pctY) : null;
+                    
+                    const duplicatedClonedNode = {
+                        id: 'node_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                        shape: targetNode.shape,
+                        pctX: coord.pctX,
+                        pctY: targetNode.pctY, 
+
+                        fineTuneOffset: targetNode.fineTuneOffset || 0,
+                        tailX: deltaTailX !== null ? (coord.pctX + deltaTailX) : null,
+                        tailY: deltaTailY !== null ? (targetNode.pctY + deltaTailY) : null,
+                        curveOffset: targetNode.curveOffset || 0
+                    };
+                    
+                    state.activeNodes.push(duplicatedClonedNode);
+                    state.draggedNode = duplicatedClonedNode; 
+                    triggerStudioToast("Node duplicated.", "success");
+                } else {
+                    state.draggedNode = targetNode;
+                }
+                return;
+            }
+
+            // Priority 4: Standard click on empty background adds a new node element
+            const targetRow = Math.floor(coord.pctY * state.gridRows);
+            const quantizedPctY = (targetRow + 0.5) / state.gridRows;
+
+
+            const uniqueNode = {
+                id: 'node_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                shape: state.selectedShape,
+                pctX: coord.pctX,
+                pctY: quantizedPctY,
+                fineTuneOffset: 0,
+                tailX: coord.pctX + 0.05, 
+                tailY: quantizedPctY,
+                curveOffset: 0
+            };
+            state.activeNodes.push(uniqueNode);
+            state.activeTailNode = uniqueNode; 
+        }
+
+        function handlePointerMove(e) {
+            const coord = getMouseCoordinatesPct(e);
+
+            if (state.activeTailNode) {
+                state.activeTailNode.tailX = coord.pctX;
+
+                const targetRow = Math.floor(coord.pctY * state.gridRows);
+                state.activeTailNode.tailY = (targetRow + 0.5) / state.gridRows;
+            } else if (state.curvingTailNode) {
+                const sY = state.curvingTailNode.pctY * canvas.height;
+                const eY = state.curvingTailNode.tailY * canvas.height;
+                const naturalMidY = (sY + eY) / 2;
+                const targetedMousePxY = coord.pctY * canvas.height;
+                
+                state.curvingTailNode.curveOffset = targetedMousePxY - naturalMidY;
+            } else if (state.draggedNode) {
+                const initialPctX = state.draggedNode.pctX;
+                const initialPctY = state.draggedNode.pctY;
+                
+                state.draggedNode.pctX = coord.pctX;
+                const targetRow = Math.floor(coord.pctY * state.gridRows);
+                state.draggedNode.pctY = (targetRow + 0.5) / state.gridRows;
+
+                const shiftDeltaX = state.draggedNode.pctX - initialPctX;
+                const shiftDeltaY = state.draggedNode.pctY - initialPctY;
+
+
+                if (state.draggedNode.tailX !== null && state.draggedNode.tailX !== undefined) {
+                    state.draggedNode.tailX += shiftDeltaX;
+                    state.draggedNode.tailY += shiftDeltaY;
+                }
+            }
+        }
+
+        function terminatePointerDrag() {
+            if (state.activeTailNode) {
+                const dist = Math.sqrt(Math.pow(state.activeTailNode.tailX - state.activeTailNode.pctX, 2) + Math.pow(state.activeTailNode.tailY - state.activeTailNode.pctY, 2));
+                if (dist < 0.02) {
+                    state.activeTailNode.tailX = null;
+                    state.activeTailNode.tailY = null;
+                } else {
+                    triggerStudioToast("Sustain Envelope locked.", "success");
+                }
+            }
+            state.draggedNode = null;
+            state.activeTailNode = null;
+
+            state.curvingTailNode = null;
+            
+            persistStudioStateToStorage();
+        }
+
+        function handleWheelPitchTuningModifier(e) {
+            e.preventDefault();
+            const coord = getMouseCoordinatesPct(e);
+            const targetNode = searchNodeAtCoordinates(coord.pctX, coord.pctY);
+
+            if (targetNode) {
+                initAudioEngine();
+                const tuningDirection = e.deltaY < 0 ? 1 : -1;
+                targetNode.fineTuneOffset = (targetNode.fineTuneOffset || 0) + tuningDirection;
+                executeNodePlayback(targetNode);
+                persistStudioStateToStorage();
+            }
+        }
+
+
+        function processDeleteRequest(e) {
+            e.preventDefault();
+            const coord = getMouseCoordinatesPct(e);
+            const targetNode = searchNodeAtCoordinates(coord.pctX, coord.pctY);
+            if (targetNode) {
+                state.activeNodes = state.activeNodes.filter(n => n.id !== targetNode.id);
+                triggerStudioToast('Deleted node.', 'rose');
+                persistStudioStateToStorage();
+            }
+        }
+
+        function refreshSlotUIState(id) {
+            const card = document.querySelector(`.slot-control-card[data-slot-id="${id}"]`);
+            if (!card) return;
+            const loadBtn = card.querySelector('.slot-load-btn');
+            
+            if (state.slots[id] && state.slots[id].length > 0) {
+                card.classList.add('border-teal-500/40', 'bg-neutral-900');
+                loadBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+
+                loadBtn.removeAttribute('disabled');
+            } else {
+                card.classList.remove('border-teal-500/40', 'bg-neutral-900');
+                loadBtn.classList.add('opacity-40', 'cursor-not-allowed');
+                loadBtn.setAttribute('disabled', 'true');
+                
+                const toggle = card.querySelector('.slot-engage-toggle');
+                if (toggle) toggle.checked = false;
+                state.slotEngaged[id] = false;
+                
+                const dot = card.querySelector('.dot');
+                if (dot) dot.style.transform = 'translateX(0px)';
+                const slider = card.querySelector('.check-slider');
+                if (slider) slider.style.backgroundColor = '';
+            }
+        }
+
+        function parseSlotStorageActions() {
+            document.querySelectorAll('.slot-control-card').forEach(card => {
+
+                const id = parseInt(card.getAttribute('data-slot-id'));
+                const saveButton = card.querySelector('.slot-save-btn');
+                const loadButton = card.querySelector('.slot-load-btn');
+                const deleteButton = card.querySelector('.slot-delete-btn');
+                const engageToggle = card.querySelector('.slot-engage-toggle');
+                const dot = card.querySelector('.dot');
+                const slider = card.querySelector('.check-slider');
+
+                slider.addEventListener('click', () => {
+                    if (!state.slots[id]) {
+                        triggerStudioToast("Slot empty. Save an arrangement first.", "info");
+                        return;
+                    }
+                    
+                    state.slotEngaged[id] = !state.slotEngaged[id];
+                    if (engageToggle) engageToggle.checked = state.slotEngaged[id];
+                    
+                    if (state.slotEngaged[id]) {
+                        dot.style.transform = 'translateX(8px)';
+
+                        dot.style.backgroundColor = '#22d3ee';
+                        slider.style.backgroundColor = '#115e59';
+                    } else {
+                        dot.style.transform = 'translateX(0px)';
+                        dot.style.backgroundColor = '';
+                        slider.style.backgroundColor = '';
+                    }
+                });
+
+                saveButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    initAudioEngine();
+                    if (state.activeNodes.length === 0) return;
+                    state.slots[id] = JSON.parse(JSON.stringify(state.activeNodes));
+                    refreshSlotUIState(id);
+                    persistStudioStateToStorage();
+                    triggerStudioToast(`Stored to Slot M${id + 1}.`, 'success');
+                });
+
+
+                loadButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    initAudioEngine();
+                    if (!state.slots[id]) return;
+                    state.activeNodes = JSON.parse(JSON.stringify(state.slots[id]));
+                    persistStudioStateToStorage();
+                    triggerStudioToast(`Recalled Slot M${id + 1}.`, 'success');
+                });
+
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    state.slots[id] = null;
+                    refreshSlotUIState(id);
+                    persistStudioStateToStorage();
+                    triggerStudioToast(`Cleared Memory Slot M${id + 1}.`, 'rose');
+                });
+            });
+        }
+
+
+        function setupAudioRecordStreamingExport() {
+            if (!mediaStreamDestination) return false;
+            recordedChunks = [];
+            try {
+                mediaRecorder = new MediaRecorder(mediaStreamDestination.stream, { mimeType: 'audio/webm;codecs=opus' });
+            } catch (err) {
+                mediaRecorder = new MediaRecorder(mediaStreamDestination.stream);
+            }
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+                const masterAudioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const blobDownloadUrl = URL.createObjectURL(masterAudioBlob);
+                const linkAnchor = document.createElement('a');
+                linkAnchor.href = blobDownloadUrl;
+                linkAnchor.download = `soundline-arrangement-${Date.now()}.webm`;
+                document.body.appendChild(linkAnchor);
+                linkAnchor.click();
+
+                setTimeout(() => {
+                    document.body.removeChild(linkAnchor);
+                    window.URL.revokeObjectURL(blobDownloadUrl);
+                }, 100);
+                isRecordingMaster = false;
+                document.getElementById('btn-audio-export').querySelector('span').innerText = 'Export';
+            };
+            return true;
+        }
+
+        function beginAudioExportSequence() {
+            initAudioEngine();
+            if (state.activeNodes.length === 0) return;
+            if (isRecordingMaster) return;
+
+            state.playheadX = 0;
+            state.lastPlayheadX = 0;
+            state.isPlaying = true;
+            isRecordingMaster = true;
+
+
+            setupAudioRecordStreamingExport();
+            mediaRecorder.start();
+            document.getElementById('btn-audio-export').querySelector('span').innerText = 'REC';
+        }
+
+        function finalizeAudioExportMix() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        }
+
+        function attachInterfaceControlHooks() {
+            document.querySelectorAll('.node-selector-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.node-selector-btn').forEach(b => {
+                        b.classList.remove('border-teal-500', 'scale-105');
+                        b.classList.add('border-neutral-900', 'opacity-60');
+                    });
+                    btn.classList.add('border-teal-500', 'scale-105');
+                    btn.classList.remove('border-neutral-900', 'opacity-60');
+                    state.selectedShape = btn.getAttribute('data-shape');
+
+                });
+            });
+
+            document.getElementById('chk-fx-overdrive').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.overdrive = e.target.checked;
+                computeDistortionCurveMatrix();
+            });
+            document.getElementById('chk-fx-fuzz').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.fuzz = e.target.checked;
+                computeDistortionCurveMatrix();
+            });
+            document.getElementById('chk-fx-crush').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.crush = e.target.checked;
+                computeDistortionCurveMatrix();
+            });
+            document.getElementById('chk-fx-grunge').addEventListener('change', (e) => {
+
+                initAudioEngine();
+                state.fx.grunge = e.target.checked;
+                computeDistortionCurveMatrix();
+            });
+            document.getElementById('chk-fx-space').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.space = e.target.checked;
+                updateAtmosphericEffectsNodes();
+            });
+            document.getElementById('chk-fx-wobble').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.wobble = e.target.checked;
+                updateAtmosphericEffectsNodes();
+            });
+
+            document.getElementById('chk-fx-ethereal').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.ethereal = e.target.checked;
+                updateGlobalFxParameters();
+
+            });
+            document.getElementById('chk-fx-sinister').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.sinister = e.target.checked;
+                updateGlobalFxParameters();
+            });
+            document.getElementById('chk-fx-psychedelic').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.psychedelic = e.target.checked;
+                updateGlobalFxParameters();
+            });
+            document.getElementById('chk-fx-smooth').addEventListener('change', (e) => {
+                initAudioEngine();
+                state.fx.smooth = e.target.checked;
+            });
+
+            const playButton = document.getElementById('btn-global-play');
+            playButton.addEventListener('click', () => {
+                initAudioEngine();
+
+                state.isPlaying = !state.isPlaying;
+                const icon = document.getElementById('play-icon');
+                if (state.isPlaying) {
+                    playButton.classList.add('bg-lime-600');
+                    playButton.classList.remove('bg-amber-600');
+                    icon.innerHTML = `<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />`;
+                } else {
+                    playButton.classList.remove('bg-lime-600');
+                    playButton.classList.add('bg-amber-600');
+                    icon.innerHTML = `<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1-1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />`;
+                }
+            });
+
+            document.getElementById('btn-global-clear').addEventListener('click', () => {
+                state.activeNodes = [];
+                audioVisualRipples = [];
+                persistStudioStateToStorage();
+            });
+
+
+            document.getElementById('slider-param-bpm').addEventListener('input', (e) => {
+                state.bpm = parseInt(e.target.value);
+                document.getElementById('lbl-val-bpm').innerText = state.bpm;
+            });
+            document.getElementById('slider-param-volume').addEventListener('input', (e) => {
+                state.masterVolume = parseFloat(e.target.value) / 100;
+                document.getElementById('lbl-val-volume').innerText = `${e.target.value}%`;
+                if (masterGainNode) masterGainNode.gain.setValueAtTime(state.masterVolume, audioContext.currentTime);
+            });
+            document.getElementById('slider-param-cutoff').addEventListener('input', (e) => {
+                state.filterCutoff = parseInt(e.target.value);
+                document.getElementById('lbl-val-cutoff').innerText = `${state.filterCutoff}Hz`;
+            });
+            document.getElementById('slider-param-attack').addEventListener('input', (e) => {
+                state.envelope.attack = parseFloat(e.target.value);
+                document.getElementById('lbl-val-attack').innerText = `${state.envelope.attack.toFixed(2)}s`;
+            });
+            document.getElementById('slider-param-release').addEventListener('input', (e) => {
+                state.envelope.release = parseFloat(e.target.value);
+
+                document.getElementById('lbl-val-release').innerText = `${state.envelope.release.toFixed(2)}s`;
+            });
+
+            document.getElementById('btn-audio-export').addEventListener('click', beginAudioExportSequence);
+
+            canvas.addEventListener('mousedown', handlePointerDown);
+            canvas.addEventListener('mousemove', handlePointerMove);
+            window.addEventListener('mouseup', terminatePointerDrag);
+            canvas.addEventListener('contextmenu', processDeleteRequest);
+            canvas.addEventListener('dblclick', processDeleteRequest);
+            canvas.addEventListener('wheel', handleWheelPitchTuningModifier, { passive: false });
+
+            canvas.addEventListener('touchstart', (e) => { if(e.touches.length === 1) handlePointerDown(e); }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => { if(e.touches.length === 1) handlePointerMove(e); }, { passive: true });
+            canvas.addEventListener('touchend', terminatePointerDrag);
+
+            document.getElementById('audio-welcome-overlay').addEventListener('click', initAudioEngine);
+            parseSlotStorageActions();
+        }
+
+
+        window.addEventListener('resize', resizeCanvasContext);
+        window.onload = function() {
+            resizeCanvasContext();
+            attachInterfaceControlHooks();
+            loadStudioStateFromStorage();
+            requestAnimationFrame(runSequencerLoop);
+        };
+    </script>
+</body>
+</html>
+
+
